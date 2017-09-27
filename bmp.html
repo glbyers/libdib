@@ -1,0 +1,160 @@
+<html>
+<head>
+	<title>Device Independant Bitmap Library</title>
+</head>
+
+<body bgcolor="white">
+	<a href="index.html">Grant's home page</a>
+	<center><h2>Device Independant Bitmap Library</h2></center>
+	
+	<p><b><i>Current version is 0.5</i></b></p>
+	
+	<ul>
+		<li><a href="#about">About</a></li>
+		<li><a href="#changes">Recent Changes</a></li>
+		<li><a href="#install">Installation</a></li>
+		<li><a href="#usage">Usage</a></li>
+		<li><a href="bmp_docs/index.html">Documentation</a></li>
+		<li><a href="#limits">Limitations</a></li>
+		<li><a href="#where">Download</a></li>
+		<li><a href="#license">License</a></li>
+		<li><a href="#contact">Contact</a></li>
+	</ul>	
+
+	<a name="about"><h4>About</h4></a>
+	The Device Independant Bitmap Library provides routines
+	to read Microsoft Windows DIB bitmap images. The library attempts 
+	to be small, simple to use, and portable.<br>
+	I have implemented the library with internal maintenance utilities to 
+	look after the dynamic allocation and deallocation of memory for you, 
+	so that's one less thing to worry about for learning C programmers!
+	</p>
+
+	<a name="changes"><h4>Recent Changes</h4></a>
+	<ul>
+		<li>fixed some colour problems when converting from 24 bit to 32 bit.</li> 
+		<li>made bmp_convert24to32 and bmp_convert24to16 return complete new 
+		    bitmaps to enable reference tracking.</li>
+		<li>various code cleanups and bug fixes.</li> 
+		<li>improved documentation.</li>
+	</ul><p>		
+
+	<a name="install"><h4>Installation</h4></a>
+	There are two ways in which you can install and use the library.<br>
+	The first, and possibly simplest way for most people, is to include
+	the source files verbatim into your own project. This is not
+	recommended, but may provide the programmer with an easy way to test
+	the library before actually installing it on their machine.</p>
+	<p>
+	The second, and recommended way to include it, is to compile the source
+	into it's own seperate module. Under windows, this would be a .dll
+	(Dynamic Link Library) and under linux, a .so (Shared Object) library.
+	This way, you just need to #include &quot;bmp.h&quot; and link against 
+	the library at compile time. Note that the included Makefile is known
+	to work on Linux and IRIX64. Just tune the Makefile to suit yourself,
+	then issue the following command
+<pre>"make &amp;&amp; make install"</pre>
+	</p>
+	
+	<a name="usage"><h4>How to use the library</h4></a>
+	This is really simple.
+<pre>
+	
+#include &lt;stdlib.h&gt;
+#include &lt;stdio.h&gt;
+#include "bmp.h"
+
+int main(int argc, char **argv)
+{
+        bitmap bmp_a, bmp_b;
+        char *img;
+        unsigned int w, h;
+
+        /* we have inbuilt garbage collection. bmp_gc() will destroy 
+         * ALL bitmap objects. Use this to ensure memory is cleaned 
+         * up before exiting */
+ 
+        atexit(bmp_gc);
+
+        /* construct a new bitmap object from a given file name, or 
+         * NULL on error. Note that if an error occurs, a message 
+         * describing the error will be sent to your stderr, usually 
+         * your console/terminal. Depending on the type of error that
+         * occured, errno may contain a more descriptive error.
+         * Just add a call to perror() in your error handler. */
+ 
+        if (!(bmp_a = bmp_load("image1.bmp"))) {
+                fprintf(stderr,"Error creating image!\n");
+                exit(EXIT_FAILURE);
+        }       
+
+        /* retrieve a pointer to the image. If passed a bitmap object
+         * that does not exist, this will return NULL. */
+ 
+        if (!(img = bmp_get_img(bmp_a))) {
+                fprintf(stderr,"Cannot get image. Object does not exist\n");
+        }       
+
+        /* get the height and width of the image. */
+
+        w = bmp_get_width(bmp_a);
+        h = bmp_get_height(bmp_a);
+
+	do_something(bmp_a);
+
+        /* if you know you are done with this image, you can destroy it.
+         * bmp_destroy always returns NULL, so for convenience you can 
+         * assign the result of the call back to your object to ensure 
+         * you don't run into trouble trying to re-use it later. */
+ 
+        bmp_a = bmp_destroy(bmp_a);
+
+        if (!(bmp_b = bmp_load("image2.bmp"))) {
+                fprintf(stderr,"Error creating image!\n");
+                exit(EXIT_FAILURE);
+        }       
+        
+	do_something(bmp_b);
+	
+        /* if bmp_b was not destroyed earlier, bmp_gc() will do this for 
+         * us now. Note that you could also call bmp_gc() anywhere in
+         * your program. atexit(bmp_gc) just ensures this will happen
+         * before actually terminating the program. */
+ 
+        exit(EXIT_SUCCESS);
+}
+</pre>
+	<p>Well, that's it! See how simple that was?<br>
+	There is one "gotcha" you should be aware of. You must never explicitly 
+	free a bitmap object yourself. Always use bmp_destroy(bitmap bmp), or
+	bmp_gc() if all bitmaps are to be destroyed.
+	</p>
+
+	<a name="limits"><h4>Limitations</h4></a>
+	Currently, only uncompressed 24 bit windows bitmap images are supported.
+	These are your normal windows bitmaps, so for most people this will work
+	as expected. However, i do intend to add support for other bit-depths 
+	and Run Length Encoded [RLE] compressed images. This, of course, will
+	be done when time permitts, or when/if i get several requests to do so.
+
+	<a name="where"><h4>Where to get the library</h4></a>
+	You can get the library in tgz (tarred, gzipped) form 
+	<a href="files/libdib-0.5.tgz">here</a>, or in .zip form
+	<a href="files/libdib-0_5.zip">here</a>
+
+	<a name="license"><h4>License</h4></a>
+	This software is distributed under the terms of the GNU General
+	Public License [GPL]. Read all about it 
+	<a href="http://www.gnu.org/licenses/gpl.html#SEC1">here</a>.
+
+	<a name="contact"><h4>Contact</h4></a>
+	As with any software, this software _will_ contain bugs. Please email
+	me with details of any such bugs along with details of how to
+	reproduce it. I can be contacted  
+	<a href="mailto:glbyers@students.latrobe.edu.au">here</a>
+	<hr>
+	Copyright (c) 2003 Grant Byers
+</body>
+</html>
+
+
